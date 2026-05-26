@@ -138,7 +138,13 @@ export default function App() {
   const estimate = solver.length > 0 ? solver[solver.length - 1].fuente : undefined;
 
   const updateSource = (key: keyof Source, value: number) => {
-    setSource((prev) => ({ ...prev, [key]: value }));
+    if (key === "z0") {
+      const clamped = Math.min(10, Math.max(0.2, parseFloat(value.toFixed(2))));
+      setSource((prev) => ({ ...prev, z0: clamped }));
+      setZ(clamped);
+    } else {
+      setSource((prev) => ({ ...prev, [key]: value }));
+    }
   };
 
   const loadJson = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -166,19 +172,40 @@ export default function App() {
               type="number"
               step={key === "a0" ? 10 : 0.1}
               value={source[key]}
+              min={key === "z0" ? 0.2 : undefined}
+              max={key === "z0" ? 10 : undefined}
               onChange={(event) => updateSource(key, Number(event.target.value))}
             />
           </label>
         ))}
         <label>
-          Corte z
-          <input type="range" min="0.2" max="5" step="0.02" value={z} onChange={(event) => setZ(Number(event.target.value))} />
+          Corte z — {z.toFixed(2)}
+          <div className="z-controls">
+            <button
+              className="z-btn"
+              onClick={() => setZ((prev) => Math.max(0.2, parseFloat((prev - 0.1).toFixed(2))))}
+            >
+              −
+            </button>
+            <input type="range" min="0.2" max="10" step="0.02" value={z} onChange={(event) => setZ(Number(event.target.value))} />
+            <button
+              className="z-btn"
+              onClick={() => setZ((prev) => Math.min(10, parseFloat((prev + 0.1).toFixed(2))))}
+            >
+              +
+            </button>
+          </div>
         </label>
         <button onClick={() => setSensors(simulateSensors(source))}>Simular sensores</button>
       </aside>
 
       <section className="workspace">
         <div className="metrics">
+          <div>
+            <span>Corte Z actual</span>
+            <strong>{z.toFixed(2)} <small>/ 10.00</small></strong>
+            <progress className="z-progress" value={z} max={10} />
+          </div>
           <div>
             <span>Mejor punto del corte</span>
             <strong>

@@ -46,6 +46,7 @@ class SeismicTkApp(tk.Tk):
         }
 
         self._build_ui()
+        self.vars["z0"].trace_add("write", self._on_z0_changed)
         self._simulate()
 
     def _build_ui(self) -> None:
@@ -71,24 +72,26 @@ class SeismicTkApp(tk.Tk):
 
         ttk.Separator(controls).grid(row=11, column=0, columnspan=2, pady=10, sticky="ew")
         ttk.Label(controls, text="Corte z").grid(row=12, column=0, sticky="w")
-        z_scale = ttk.Scale(controls, from_=0.2, to=5.0, variable=self.vars["z_slice"], command=self._draw)
-        z_scale.grid(row=12, column=1, sticky="ew")
+        self.z_label = ttk.Label(controls, text=f"{self.vars['z_slice'].get():.2f} / 10.00")
+        self.z_label.grid(row=12, column=1, sticky="e")
+        z_scale = ttk.Scale(controls, from_=0.2, to=10.0, variable=self.vars["z_slice"], command=self._on_z_scale)
+        z_scale.grid(row=13, column=0, columnspan=2, sticky="ew")
 
         ttk.Button(controls, text="Simular datos", command=self._simulate).grid(
-            row=13, column=0, columnspan=2, pady=(14, 4), sticky="ew"
+            row=14, column=0, columnspan=2, pady=(14, 4), sticky="ew"
         )
         ttk.Button(controls, text="Analizar E(x,y,z)", command=self._analyze).grid(
-            row=14, column=0, columnspan=2, pady=4, sticky="ew"
-        )
-        ttk.Button(controls, text="Resolver inverso", command=self._solve).grid(
             row=15, column=0, columnspan=2, pady=4, sticky="ew"
         )
-        ttk.Button(controls, text="Exportar JSON", command=self._export).grid(
+        ttk.Button(controls, text="Resolver inverso", command=self._solve).grid(
             row=16, column=0, columnspan=2, pady=4, sticky="ew"
+        )
+        ttk.Button(controls, text="Exportar JSON", command=self._export).grid(
+            row=17, column=0, columnspan=2, pady=4, sticky="ew"
         )
 
         self.summary = tk.Text(controls, width=35, height=18, wrap="word")
-        self.summary.grid(row=17, column=0, columnspan=2, pady=(12, 0), sticky="nsew")
+        self.summary.grid(row=18, column=0, columnspan=2, pady=(12, 0), sticky="nsew")
 
         workspace = ttk.Frame(self, padding=(0, 12, 12, 12))
         workspace.grid(row=0, column=1, sticky="nsew")
@@ -102,11 +105,28 @@ class SeismicTkApp(tk.Tk):
         ttk.Label(parent, text=label).grid(row=row, column=0, sticky="w", pady=2)
         ttk.Entry(parent, textvariable=self.vars[key], width=12).grid(row=row, column=1, sticky="ew", pady=2)
 
+    def _on_z_scale(self, *_args) -> None:
+        val = round(self.vars["z_slice"].get(), 2)
+        self.z_label.configure(text=f"{val:.2f} / 10.00")
+        self._draw()
+
+    def _on_z0_changed(self, *_args) -> None:
+        try:
+            raw = self.vars["z0"].get()
+        except tk.TclError:
+            return
+        clamped = round(min(10.0, max(0.2, raw)), 2)
+        if raw != clamped:
+            self.vars["z0"].set(clamped)
+        self.vars["z_slice"].set(clamped)
+        self.z_label.configure(text=f"{clamped:.2f} / 10.00")
+
     def _read_real_source(self) -> FuenteSismica:
+        z0 = round(min(10.0, max(0.2, self.vars["z0"].get())), 2)
         return FuenteSismica(
             self.vars["x0"].get(),
             self.vars["y0"].get(),
-            self.vars["z0"].get(),
+            z0,
             self.vars["a0"].get(),
         )
 

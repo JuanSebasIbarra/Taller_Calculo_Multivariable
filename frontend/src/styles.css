@@ -56,6 +56,24 @@ input[type="range"] {
   width: 100%;
 }
 
+.z-controls {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.z-controls input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.z-btn {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 4px 10px;
+}
+
 button {
   background: #1f6f78;
   border: 0;
@@ -79,7 +97,7 @@ button:hover {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -101,6 +119,20 @@ button:hover {
   font-size: 1rem;
   margin-top: 5px;
   overflow-wrap: anywhere;
+}
+
+.metrics small {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.z-progress {
+  display: block;
+  margin-top: 6px;
+  width: 100%;
+  height: 6px;
+  accent-color: #1f6f78;
 }
 
 .heatmap {
